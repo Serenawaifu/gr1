@@ -1,0 +1,5 @@
+email1@example.com:password1
+socks5://user1:pass1@1.1.1.1:8080
+
+email2@example.com:ref123:password2
+http://user2:pass2@2.2.2.2:8080
