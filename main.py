@@ -12,7 +12,7 @@ class GrassFarmBot:
     def __init__(self):
         self.db = Database()
         self.proxy_manager = ProxyManager(self.db)
-        self.captcha_solver = CaptchaSolver("YOUR_2CAPTCHA_API_KEY")  # <button class="citation-flag" data-index="8">
+        self.captcha_solver = CaptchaSolver("YOUR_2CAPTCHA_API_KEY")
         self.account_manager = AccountManager(
             self.db, 
             self.proxy_manager, 
@@ -21,7 +21,7 @@ class GrassFarmBot:
         self.telegram_app = ApplicationBuilder().token("YOUR_TELEGRAM_TOKEN").build()
 
     async def start(self):
-        await self.db.initialize()  # Initialize DB <button class="citation-flag" data-index="5">
+        await self.db.initialize()
         await self.telegram_app.initialize()
         await self.telegram_app.start()
         await self.register_handlers()
@@ -102,11 +102,16 @@ class GrassFarmBot:
         await update.message.reply_text("Proxies added successfully!")
 
     async def error_handler(self, update: object, context: ContextTypes.DEFAULT_TYPE):
-        logger.error(f"Error: {context.error}")
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=f"⚠️ An error occurred: {str(context.error)[:200]}"
-        )
+        try:
+            raise context.error
+        except asyncio.CancelledError:
+            logger.warning("Asyncio task was cancelled.")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=f"⚠️ An error occurred: {str(e)}"
+            )
 
     def run(self):
         self.telegram_app.add_error_handler(self.error_handler)
