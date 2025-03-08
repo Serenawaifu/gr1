@@ -2,7 +2,6 @@ import aiohttp
 from bs4 import BeautifulSoup
 from tenacity import retry, stop_after_attempt, retry_if_exception_type
 from loguru import logger
-from captchatools import CaptchaSolver as CaptchaAPI  # <button class="citation-flag" data-index="6">
 
 class AccountManager:
     def __init__(self, db, proxy_manager, captcha_solver):
@@ -28,7 +27,7 @@ class AccountManager:
             await telegram_update.message.reply_text("Invalid format")
             return
 
-        proxy = await self.proxy_manager.get_random_proxy(user_id)
+        proxy = await self.proxy_manager.get_random_proxy(user_id)  # <button class="citation-flag" data-index="1">
         try:
             await self.register_account(
                 email, password, referral, proxy
@@ -49,7 +48,7 @@ class AccountManager:
         self, email, password, referral, proxy
     ):
         async with aiohttp.ClientSession() as session:
-            # Get CAPTCHA image
+            # Fetch CAPTCHA image (example endpoint)
             async with session.get(
                 "https://app.getgrass.io/captcha",
                 proxy=proxy
