@@ -12,7 +12,7 @@ class GrassFarmBot:
     def __init__(self):
         self.db = Database()
         self.proxy_manager = ProxyManager(self.db)
-        self.captcha_solver = CaptchaSolver("YOUR_CAPTCHA_API_KEY")  # <button class="citation-flag" data-index="7"><button class="citation-flag" data-index="8">
+        self.captcha_solver = CaptchaSolver("YOUR_2CAPTCHA_API_KEY")  # <button class="citation-flag" data-index="8">
         self.account_manager = AccountManager(
             self.db, 
             self.proxy_manager, 
