@@ -7,6 +7,8 @@ class ProxyManager:
             lines = f.read().splitlines()
             current_proxy = None
             for line in lines:
+                if line.strip() == "":  # Skip empty lines
+                    continue
                 if "@" in line:  # Proxy line
                     parts = line.split("://")
                     protocol = parts[0]
@@ -18,5 +20,5 @@ class ProxyManager:
                             telegram_id, protocol, user, password, ip, port
                         ) VALUES (?, ?, ?, ?, ?, ?)
                     """, (user_id, protocol, user, password, ip, port))
-                else:  # Account line
+                else:  # Account line (email:password or email:ref:password)
                     current_proxy = line
