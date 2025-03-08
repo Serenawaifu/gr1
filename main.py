@@ -1,4 +1,5 @@
 import asyncio
+import signal
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from loguru import logger
@@ -12,13 +13,13 @@ class GrassFarmBot:
     def __init__(self):
         self.db = Database()
         self.proxy_manager = ProxyManager(self.db)
-        self.captcha_solver = CaptchaSolver("YOUR_2CAPTCHA_API_KEY")
+        self.captcha_solver = CaptchaSolver("YOUR_2CAPTCHA_API_KEY")  # Captcha Solver API Key
         self.account_manager = AccountManager(
             self.db, 
             self.proxy_manager, 
             self.captcha_solver
         )
-        self.telegram_app = ApplicationBuilder().token("YOUR_TELEGRAM_TOKEN").build()
+        self.telegram_app = ApplicationBuilder().token("YOUR_TELEGRAM_TOKEN").build()  # Telegram Bot Token
 
     async def start(self):
         await self.db.initialize()
@@ -108,14 +109,57 @@ class GrassFarmBot:
             logger.warning("Asyncio task was cancelled.")
         except Exception as e:
             logger.error(f"An error occurred: {e}")
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=f"⚠️ An error occurred: {str(e)}"
-            )
+            if update and hasattr(update, 'effective_chat') and update.effective_chat:
+                await context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=f"⚠️ An error occurred: {str(e)}"
+                )
+
+    async def shutdown(self, sig):
+        """Cleanup tasks tied to the service's shutdown."""
+        logger.info(f"Received exit signal {sig.name}...")
+        tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        
+        # Stop the updater first
+        logger.info("Stopping updater...")
+        if hasattr(self.telegram_app, 'updater') and self.telegram_app.updater:
+            await self.telegram_app.updater.stop()
+        
+        # Stop the application
+        logger.info("Stopping application...")
+        await self.telegram_app.stop()
+        
+        # Cancel any remaining tasks
+        if tasks:
+            logger.info(f"Cancelling {len(tasks)} outstanding tasks...")
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+        
+        logger.info("Shutdown complete.")
 
     def run(self):
+        # Set up error handler
         self.telegram_app.add_error_handler(self.error_handler)
-        asyncio.run(self.start())
+        
+        # Create a new event loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        # Set up proper signal handling for graceful shutdown
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            loop.add_signal_handler(
+                sig, lambda s=sig: asyncio.create_task(self.shutdown(s))
+            )
+        
+        try:
+            # Run the bot with the new event loop
+            loop.run_until_complete(self.start())
+            loop.run_forever()
+        finally:
+            # Clean up
+            loop.close()
+            logger.info("Successfully shut down the bot")
 
 if __name__ == "__main__":
     bot = GrassFarmBot()
