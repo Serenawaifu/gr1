@@ -1,11 +1,12 @@
-from captchatools import CaptchaClient  # <button class="citation-flag" data-index="7"><button class="citation-flag" data-index="8">
+from twocaptcha import TwoCaptcha  # <button class="citation-flag" data-index="8">
 
 class CaptchaSolver:
     def __init__(self, api_key):
-        self.client = CaptchaClient(api_key)  # Initialize with API key <button class="citation-flag" data-index="7">
+        self.client = TwoCaptcha(api_key)
 
     def solve(self, image_data):
         try:
-            return self.client.solve_captcha(image_data)  # Use library method <button class="citation-flag" data-index="8">
+            result = self.client.normal(image_data)
+            return result["code"]
         except Exception as e:
             raise RuntimeError("CAPTCHA solve failed") from e
