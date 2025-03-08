@@ -1,0 +1,8 @@
+aiohttp
+aiosqlite
+captchatools
+loguru
+python-telegram-bot
+beautifulsoup4
+tenacity
+python-socks
