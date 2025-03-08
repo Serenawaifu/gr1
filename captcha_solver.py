@@ -1,4 +1,4 @@
-from twocaptcha import TwoCaptcha  # <button class="citation-flag" data-index="8">
+from twocaptcha import TwoCaptcha  # Correct import
 
 class CaptchaSolver:
     def __init__(self, api_key):
